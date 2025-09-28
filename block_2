@@ -1,0 +1,106 @@
+-- 21. თანამშრომლები, რომელთა გვარი იწყება 'S' ან 'T', ხელფასი 2–ჯერ საშუალოზე მეტი dept-ში
+select first_name, last_name, salary
+from employees
+where substr(last_name,1,1) in ('S','T')
+  and salary > 2*(select avg(salary) from employees where department_id=employees.department_id);
+
+-- 22. იმ თანამშრომელთა სახელები, რომელთა გვარის სიგრძე > 7, გვარი იწყება 'M', აჩვენეთ hire_date-ის თვე
+select first_name, last_name, to_char(hire_date,'MM') as hire_month
+from employees
+where length(last_name) > 7 and substr(last_name,1,1)='M';
+
+-- 23. თანამშრომლები, რომელთა სახელის პირველი ასო 'J', გვარი შეიცავს 'e', ხელფასი არაა NULL
+select first_name, last_name, salary
+from employees
+where substr(first_name,1,1)='J'
+  and instr(lower(last_name),'e')>0
+  and salary is not null;
+
+-- 24. იმ თანამშრომელთა გვარები, რომლებიც აყვანილნი არიან ზაფხულის თვეებში (06,07,08)
+select first_name, last_name
+from employees
+where extract(month from hire_date) in (6,7,8);
+
+-- 25. თანამშრომლები, რომელთა hire_date-ის დღე = 15 ან 30
+select first_name, last_name, hire_date
+from employees
+where to_char(hire_date,'DD') in ('15','30');
+
+-- 26. ხელფასის დიაპაზონი: min, max, avg თითო დეპარტამენტისთვის
+select department_id, min(salary) as min_salary, max(salary) as max_salary, avg(salary) as avg_salary
+from employees
+group by department_id;
+
+-- 27. თანამშრომლები, რომელთა hire_date-ზე გასული წლები > 5, მაგრამ < 10
+select first_name, last_name, hire_date
+from employees
+where months_between(sysdate, hire_date)/12 > 5
+  and months_between(sysdate, hire_date)/12 < 10;
+
+-- 28. თანამშრომლები, რომელთა სახელში ან გვარში 'a' 1–ჯერ მაინც გვხვდება
+select first_name, last_name
+from employees
+where instr(lower(first_name||last_name),'a')>0;
+
+-- 29. ხელფასის საშუალო იმ თანამშრომლებისთვის, რომლებიც არ არიან მენეჯერები
+select avg(salary) as avg_salary
+from employees
+where employee_id not in (select manager_id from employees where manager_id is not null);
+
+-- 30. იმ თანამშრომელთა რაოდენობა, რომელთა hire_date წლის ბოლო ციფრის ნამრავლი > 10
+select count(*)
+from employees
+where (mod(to_number(substr(to_char(hire_date,'YYYY'),1,1))*to_number(substr(to_char(hire_date,'YYYY'),2,1)),10) > 10);
+
+-- 31. თანამშრომლები, რომელთა გვარის სიგრძე კენტი, და გვარი იწყება 'B'
+select first_name, last_name
+from employees
+where mod(length(last_name),2)=0 and substr(last_name,1,1)='B';
+
+-- 32. ხელფასის სიგრძის ფორმატირება 10 სიმბოლოზე, ცარიელი ჩანაცვლება '*'-ით მარცხნიდან
+select first_name, last_name, lpad(salary,10,'*') as formatted_salary
+from employees;
+
+-- 33. ყველა დეპარტამენტის საშუალო ხელფასი, თუმცა NULL salarialies ჩავთვალოთ 0
+select department_id, avg(nvl(salary,0)) as avg_salary
+from employees
+group by department_id;
+
+-- 34. თანამშრომლები, რომელთა hire_date კვირის დღე 'FRIDAY' არის
+select first_name, last_name, hire_date
+from employees
+where to_char(hire_date,'DY')='FRI';
+
+-- 35. იმ თანამშრომელთა სახელები, რომელთა hire_date-ის თვე = hire_date-ის დღე
+select first_name, last_name, hire_date
+from employees
+where to_number(to_char(hire_date,'MM')) = to_number(to_char(hire_date,'DD'));
+
+-- 36. იმ თანამშრომლების ამოღება, რომელთა გვარი შეიცავს 'o' ან 'p' 2–ჯერ
+select first_name, last_name
+from employees
+where length(regexp_replace(lower(last_name),'[^op]'))=2;
+
+-- 37. თანამშრომლები, რომელთა hire_date 5 წლის წინანდელია, მაგრამ department_id != 50
+select first_name, last_name
+from employees
+where months_between(sysdate, hire_date)/12 >= 5
+  and department_id != 50;
+
+-- 38. თანამშრომლები, რომლებიც არ არიან მენეჯერები, მაგრამ მათ manager_id-ის ველი NULL–ია
+select first_name, last_name, employee_id
+from employees
+where employee_id not in (select manager_id from employees)
+  and manager_id is null;
+
+-- 39. თანამშრომლები, რომელთა salary > dept average salary, და dept_id != 40
+select first_name, last_name, salary
+from employees e
+where salary > (select avg(salary) from employees where department_id=e.department_id)
+  and department_id != 40;
+
+-- 40. თანამშრომლები, რომელთა hire_date დღე 1 ან 15, და სახელის პირველი ასო = 'A'
+select first_name, last_name, hire_date
+from employees
+where to_char(hire_date,'DD') in ('01','15')
+  and substr(first_name,1,1)='A';
