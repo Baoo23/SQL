@@ -1,0 +1,99 @@
+-- 61. თანამშრომლები, რომელთა hire_date დღის + თვის ჯამი > 20
+select first_name, last_name, hire_date
+from employees
+where to_number(to_char(hire_date,'DD')) + to_number(to_char(hire_date,'MM')) > 20;
+
+-- 62. იმ თანამშრომლების სახელები, რომელთა first_name და last_name სიგრძეების ჯამი > 12
+select first_name, last_name
+from employees
+where length(first_name) + length(last_name) > 12;
+
+-- 63. იმ თანამშრომელთა hire_date დღე Monday-ზე მოდის
+select first_name, last_name, hire_date
+from employees
+where to_char(hire_date,'DY')='MON';
+
+-- 64. იმ თანამშრომელთა salary-ს საშუალო თითო department_id > 6000
+select department_id, avg(salary) as avg_salary
+from employees
+group by department_id
+having avg(salary) > 6000;
+
+-- 65. იმ თანამშრომელთა hire_date წლის ციფრების ნამრავლი (თუ 0=1)
+select first_name, last_name,
+       (case when substr(to_char(hire_date,'YYYY'),3,1)=0 then 1 else to_number(substr(to_char(hire_date,'YYYY'),3,1)) end) *
+       (case when substr(to_char(hire_date,'YYYY'),4,1)=0 then 1 else to_number(substr(to_char(hire_date,'YYYY'),4,1)) end) as year_product
+from employees;
+
+-- 66. თანამშრომლები, რომელთა last_name იწყება 'S' ან 'T'
+select first_name, last_name
+from employees
+where substr(last_name,1,1) in ('S','T');
+
+-- 67. თანამშრომლები, რომელთა hire_date თვის ციფრი ლუწია
+select first_name, last_name, hire_date
+from employees
+where mod(extract(month from hire_date),2)=0;
+
+-- 68. თანამშრომლები, რომელთა first_name პირველი და ბოლო ასო ერთნაირია
+select first_name, last_name
+from employees
+where substr(first_name,1,1) = substr(first_name,-1,1);
+
+-- 69. იმ თანამშრომელთა hire_date დღის 1–ის ორშაბათი
+select first_name, last_name, hire_date,
+       next_day(trunc(hire_date,'MM')-1,'MONDAY') as first_monday
+from employees;
+
+-- 70. იმ თანამშრომელთა salary ფორმატში 8 სიმბოლო, ცარიელები ჩავსვათ '*'
+select first_name, last_name, lpad(salary,8,'*') as formatted_salary
+from employees;
+
+-- 71. თანამშრომლები, რომელთა hire_date დღე პარასკევზეა და salary > 7000
+select first_name, last_name, hire_date, salary
+from employees
+where to_char(hire_date,'DY')='FRI' and salary > 7000;
+
+-- 72. იმ თანამშრომელთა hire_date თვის ბოლო ორშაბათი
+select first_name, last_name, hire_date,
+       next_day(last_day(hire_date)-7,'MONDAY') as last_monday
+from employees;
+
+-- 73. იმ თანამშრომელთა hire_date დღე = hire_date თვის ციფრი
+select first_name, last_name, hire_date
+from employees
+where to_number(to_char(hire_date,'DD')) = to_number(to_char(hire_date,'MM'));
+
+-- 74. იმ თანამშრომელთა salary > 1.5 dept average
+select first_name, last_name, salary
+from employees e
+where salary > 1.5*(select avg(salary) from employees where department_id=e.department_id);
+
+-- 75. თანამშრომლები, რომელთა hire_date დღე 10 ან 20 და first_name სიგრძე > 5
+select first_name, last_name, hire_date
+from employees
+where to_char(hire_date,'DD') in ('10','20') and length(first_name) > 5;
+
+-- 76. hire_date-დან გასული სრული კვარტლები
+select first_name, last_name, trunc(months_between(sysdate, hire_date)/3) as quarters_passed
+from employees;
+
+-- 77. hire_date წელი > 2012 და salary < 8000
+select first_name, last_name, hire_date, salary
+from employees
+where extract(year from hire_date) > 2012 and salary < 8000;
+
+-- 78. იმ თანამშრომელთა hire_date დღე კვირის დღის ციფრისგან (D) < 5
+select first_name, last_name, hire_date
+from employees
+where to_number(to_char(hire_date,'D')) < 5;
+
+-- 79. თანამშრომლები, რომელთა first_name პირველ 3 ასოში მეორე ასო პატარა, პირველი და მესამე დიდი
+select first_name, last_name,
+       upper(substr(first_name,1,1)) || lower(substr(first_name,2,1)) || upper(substr(first_name,3,1)) as formatted_name
+from employees
+where length(first_name)>=3;
+
+-- 80. იმ თანამშრომელთა hire_date დღის ციფრი კუბი
+select first_name, last_name, power(to_number(to_char(hire_date,'DD')),3) as day_cube
+from employees;
