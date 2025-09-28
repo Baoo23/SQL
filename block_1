@@ -1,0 +1,133 @@
+-- 1. იმ თანამშრომელთა ამოღება, რომელთა გვარის სიგრძე იყოფა 3-ზე, სახელის მხოლოდ პირველი ნახევარი
+select first_name, last_name,
+       substr(first_name,1,ceil(length(first_name)/2)) as first_half
+from employees
+where mod(length(last_name),3) = 0;
+
+-- 2. იმ თანამშრომელთა ამოღება, რომელთა აყვანის დღის და თვის ციფრები თანხვდება, აყვანის შემდეგი პირველი ორშაბათი
+select first_name, last_name, hire_date,
+       next_day(hire_date,'MONDAY') as next_monday
+from employees
+where to_char(hire_date,'DD') = to_char(hire_date,'MM');
+
+-- 3. ხელფასის ფორმატირება 15 სიმბოლოს, სიცარიელის ჩანაცვლება '$'-ით მარცხნიდან
+select first_name, last_name, salary,
+       lpad(salary,15,'$') as formatted_salary
+from employees;
+
+-- 4. თანამშრომლის სრული სახელი, მას აქვს რამდენი თვე ნამუშევარი, დალაგებული თვეების მიხედვით
+select first_name || ' ' || last_name as full_name,
+       trunc(months_between(sysdate, hire_date)) as months_worked
+from employees
+order by months_worked;
+
+-- 5. იმ თანამშრომელთა ამოღება, რომელთა გვარის მეორე ასო არის 'o' ან 'a', ხელფასი 5000–დან 20000-მდე, დეპარტამენტი არაა 40 ან 50
+select first_name, last_name, department_id
+from employees
+where substr(last_name,2,1) in ('o','a')
+  and salary > 5000 and salary < 20000
+  and department_id not in (40,50);
+
+-- 6. 2004 ან 2005 წელს აყვანილი თანამშრომლები, წლიური ხელფასი > 50000
+select first_name, last_name, hire_date, salary*12 as annual_salary
+from employees
+where extract(year from hire_date) in (2004,2005)
+  and salary*12 > 50000;
+
+-- 7. თანამშრომლები, რომელთა სამუშაო გამოცდილება 10+ წელია, სახელი პირველი ასო + გვარი, ხელფასი 20% გაზრდილი
+select substr(first_name,1,1) || '.' || last_name as short_name,
+       round(salary*1.2) as increased_salary
+from employees
+where months_between(sysdate, hire_date)/12 >= 10;
+
+-- 8. თანამშრომლები საკომისიოთი, იმეილში არ არის '@', ტელეფონი იწყება '995' ან '+995'
+select first_name, last_name, email, phone_number, commission_pct
+from employees
+where commission_pct is not null
+  and instr(email,'@') = 0
+  and (phone_number like '995%' or phone_number like '+995%');
+
+-- 9. რამდენი თანამშრომელია 5+ წლიანი გამოცდილებით
+select count(*)
+from employees
+where months_between(sysdate, hire_date)/12 > 5;
+
+-- 10. თანამშრომელთა სახელები, გვარები, მენეჯერის ID
+select first_name, last_name, manager_id
+from employees;
+
+-- 11. დეპარტამენტების საშუალო საკომისიო, NULL ჩავთვალოთ 0.5, dept 30 გამორიცხული
+select department_id,
+       avg(nvl(commission_pct,0.5)) as avg_commission
+from employees
+where department_id != 30
+group by department_id;
+
+-- 12. თანამშრომელთა რიცხვი გამოცდილების კატეგორიებით და საშუალო ხელფასი
+select case when months_between(sysdate, hire_date)/12 <= 1 then 'beginner'
+            when months_between(sysdate, hire_date)/12 <= 3 then 'middle'
+            else 'senior' end as experience,
+       count(*) as emp_count,
+       avg(salary) as avg_salary
+from employees
+group by case when months_between(sysdate, hire_date)/12 <= 1 then 'beginner'
+              when months_between(sysdate, hire_date)/12 <= 3 then 'middle'
+              else 'senior' end
+order by experience desc;
+
+-- 13. საკომისიოების ჯამი იმ თანამშრომელთა, რომელთა სახელი ან გვარი შეიცავს 'a'
+select sum(nvl(commission_pct,0)) as total_commission
+from employees
+where lower(first_name) like '%a%' or lower(last_name) like '%a%';
+
+-- 14. მაქსიმალური ხელფასი მენეჯერის მიხედვით, სამუშაო >2 წელი, საკომისიო მოცემულია
+select manager_id, max(salary) as max_salary
+from employees
+where months_between(sysdate, hire_date)/12 > 2
+  and commission_pct is not null
+group by manager_id;
+
+-- 15. UK-ში, ხელფასი >50% dept avg, გამოცდილება >10 წელი
+select e.last_name as emp_lastname,
+       nvl((select e2.last_name from employees e2 where e2.employee_id=e.manager_id),'No Man') as man_lastname,
+       to_char(salary,'$999,999.00') as emp_salary,
+       to_char(hire_date,'DD MON, YYYY') as hire_date,
+       (select count(distinct job_id) from employees) as job_count
+from employees e
+join departments d on e.department_id = d.department_id
+join locations l on d.location_id = l.location_id
+where l.country_id='UK'
+  and salary > 0.5*(select avg(salary) from employees where department_id=e.department_id)
+  and months_between(sysdate, hire_date)/12 > 10
+order by length(last_name) desc;
+
+-- 16. ფუნქციის გარეშე role გამოყვანა job_id-სგან, თანამშრომელთა რაოდენობა
+select substr(job_id,instr(job_id,'_')+1) as role,
+       count(*) as count_emp
+from employees
+group by substr(job_id,instr(job_id,'_')+1)
+order by role;
+
+-- 17. დეპარტამენტები, სადაც job_id!='ST_CLERK'
+select department_name from departments
+where department_id not in (select department_id from employees where job_id='ST_CLERK');
+
+-- 18. ქვეყნები, სადაც დეპარტამენტები არ არის
+select country_id, country_name from countries
+where country_id not in (select location_id from locations l join departments d on l.location_id=d.location_id);
+
+-- 19. უნიკალური job_id დეპარტამენტებში 10,20,50
+select distinct job_id, department_id
+from employees
+where department_id in (10,20,50)
+order by decode(department_id,10,1,50,2,20,3);
+
+-- 20. მინიმალური ხელფასის თანამშრომელი დეპარტამენტში, გასაუბრების თარიღი მომდევნო თვეში, თუ შაბათი/კვირა -> ორშაბათი
+select e.first_name, e.last_name, e.employee_id, e.department_id, d.department_name,
+       nvl((select first_name||' '||last_name from employees m where m.employee_id=e.manager_id),'No Man') as manager_name,
+       case when to_char(add_months(hire_date,1),'DY') in ('SAT','SUN')
+            then next_day(add_months(hire_date,1),'MONDAY')
+            else add_months(hire_date,1) end as interview_date
+from employees e
+join departments d on e.department_id=d.department_id
+where salary = (select min(salary) from employees where department_id=e.department_id);
