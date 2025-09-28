@@ -1,0 +1,100 @@
+-- 81. თანამშრომლები, რომელთა hire_date დღე + month = 30
+select first_name, last_name, hire_date
+from employees
+where to_number(to_char(hire_date,'DD')) + to_number(to_char(hire_date,'MM')) = 30;
+
+-- 82. იმ თანამშრომელთა last_name სიგრძე > 8 და first_name სიგრძე < 5
+select first_name, last_name
+from employees
+where length(last_name) > 8 and length(first_name) < 5;
+
+-- 83. hire_date პარასკევზე მოდის ან salary > 10000
+select first_name, last_name, hire_date, salary
+from employees
+where to_char(hire_date,'DY')='FRI' or salary > 10000;
+
+-- 84. იმ თანამშრომელთა first_name პირველი და ბოლო ასო ერთად 'A'
+select first_name, last_name
+from employees
+where substr(first_name,1,1) = 'A' and substr(first_name,-1,1) = 'A';
+
+-- 85. hire_date წლის მეორე ციფრი ლუწია
+select first_name, last_name, hire_date
+from employees
+where mod(to_number(substr(to_char(hire_date,'YYYY'),2,1)),2)=0;
+
+-- 86. იმ თანამშრომელთა hire_date დღე მომდევნო ორშაბათზე გადავიტანოთ
+select first_name, last_name, hire_date,
+       next_day(hire_date,'MONDAY') as next_monday
+from employees;
+
+-- 87. იმ თანამშრომელთა salary > dept-ის max salary 80%
+select first_name, last_name, salary
+from employees e
+where salary > 0.8*(select max(salary) from employees where department_id=e.department_id);
+
+-- 88. first_name და last_name ერთ ველში, გვარის პირველ 3 ასოზე მეტი არაა
+select first_name || '_' || last_name as full_name
+from employees
+where length(substr(last_name,1,3)) <= 3;
+
+-- 89. hire_date თვის პირველი პარასკევი
+select first_name, last_name, hire_date,
+       next_day(trunc(hire_date,'MM')-1,'FRIDAY') as first_friday
+from employees;
+
+-- 90. hire_date დღის ციფრი Monday–ის ან Wednesday-ის რიგით ნომერი
+select first_name, last_name, hire_date,
+       decode(to_char(hire_date,'DY'),'MON',1,'WED',3,0) as day_number
+from employees;
+
+-- 91. hire_date–დან გასული სრული 6-თვიანი პერიოდები
+select first_name, last_name, trunc(months_between(sysdate, hire_date)/6) as six_months_passed
+from employees;
+
+-- 92. first_name-ის შუა ასოები (თუ სიგრძე ლუწია, 2 შუა ასო)
+select first_name, last_name,
+       substr(first_name, trunc(length(first_name)/2), 1) as middle_letter
+from employees
+where mod(length(first_name),2) = 1;
+
+-- 93. hire_date თვის დღე = 15 ან 25 და salary BETWEEN 4000 AND 8000
+select first_name, last_name, hire_date, salary
+from employees
+where to_char(hire_date,'DD') in ('15','25') and salary between 4000 and 8000;
+
+-- 94. hire_date წლის ბოლო 2 ციფრის ნამრავლი
+select first_name, last_name,
+       (case when substr(to_char(hire_date,'YYYY'),3,1)=0 then 1 else to_number(substr(to_char(hire_date,'YYYY'),3,1)) end) *
+       (case when substr(to_char(hire_date,'YYYY'),4,1)=0 then 1 else to_number(substr(to_char(hire_date,'YYYY'),4,1)) end) as year_product
+from employees;
+
+-- 95. hire_date–დან 3 წლის შემდგომი პირველი პარასკევი
+select first_name, last_name, hire_date,
+       next_day(add_months(hire_date,36),'FRIDAY') as friday_after_3_years
+from employees;
+
+-- 96. იმ თანამშრომელთა salary, რომლებიც მეტია department average salary + 1000
+select first_name, last_name, salary
+from employees e
+where salary > (select avg(salary)+1000 from employees where department_id=e.department_id);
+
+-- 97. first_name-ის პირველი 2 ასო, ორივე დიდი ასო
+select first_name, last_name, upper(substr(first_name,1,2)) as first_two_upper
+from employees;
+
+-- 98. hire_date დღის კუბი + თვის კვადრატ
+select first_name, last_name, 
+       power(to_number(to_char(hire_date,'DD')),3) + power(to_number(to_char(hire_date,'MM')),2) as day_cube_plus_month_square
+from employees;
+
+-- 99. first_name პირველი ასო დიდი, last_name ბოლო ასო დიდი, შუა '_'
+select first_name, last_name, 
+       upper(substr(first_name,1,1)) || '_' || upper(substr(last_name,-1,1)) as formatted_name
+from employees;
+
+-- 100. hire_date-დან გასული სრული კვირები, salary 5% ზრდით
+select first_name, last_name,
+       trunc(months_between(sysdate, hire_date)*4.34524/7) as weeks_passed,
+       round(salary*1.05,0) as increased_salary
+from employees;
