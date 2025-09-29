@@ -1,8 +1,19 @@
 -- 1. იმ თანამშრომელთა ამოღება, რომელთა გვარის სიგრძე იყოფა 3-ზე, სახელის მხოლოდ პირველი ნახევარი
-select first_name, last_name,
-       substr(first_name,1,ceil(length(first_name)/2)) as first_half
-from employees
-where mod(length(last_name),3) = 0;
+
+select e.first_name, e.last_name,
+case 
+when mod(length(e.first_name),2) = 0 then substr(e.first_name, 1, length(e.first_name)/2)
+else  substr(e.first_name, 1, length(e.first_name)/2 + 1)
+end as first_half
+from hr.employees e
+where mod(length(e.last_name),3) = 0;
+
+
+select e.first_name, e.last_name , substr(e.first_name,1,round(length(e.first_name)/2))
+from hr.employees e
+where mod(length(e.last_name),3) = 0;
+
+
 
 -- 2. იმ თანამშრომელთა ამოღება, რომელთა აყვანის დღის და თვის ციფრები თანხვდება, აყვანის შემდეგი პირველი ორშაბათი
 select first_name, last_name, hire_date,
