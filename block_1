@@ -16,10 +16,14 @@ where mod(length(e.last_name),3) = 0;
 
 
 -- 2. იმ თანამშრომელთა ამოღება, რომელთა აყვანის დღის და თვის ციფრები თანხვდება, აყვანის შემდეგი პირველი ორშაბათი
-select first_name, last_name, hire_date,
-       next_day(hire_date,'MONDAY') as next_monday
-from employees
-where to_char(hire_date,'DD') = to_char(hire_date,'MM');
+
+
+select e.email, e.hire_date, e.job_id from hr.employees e
+where to_number(to_char(e.hire_date, 'MM')) = to_number(to_char(e.hire_date, 'DD'))
+
+select e.email, e.hire_date, e.job_id from hr.employees e 
+where extract(month from e.hire_date) = extract(day from e.hire_date)
+
 
 -- 3. ხელფასის ფორმატირება 15 სიმბოლოს, სიცარიელის ჩანაცვლება '$'-ით მარცხნიდან
 select first_name, last_name, salary,
